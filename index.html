@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wordle Game</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      color: #333;
+    }
+    .game-container {
+      text-align: center;
+      max-width: 400px;
+      width: 100%;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(7, 50px);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .board div {
+      width: 50px;
+      height: 50px;
+      border: 2px solid #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 20px;
+      text-transform: uppercase;
+    }
+    .input-container {
+      margin-bottom: 20px;
+    }
+    .input-container input {
+      width: 120px;
+      height: 40px;
+      text-transform: uppercase;
+      font-size: 20px;
+      text-align: center;
+    }
+    .message {
+      font-size: 18px;
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    .correct {
+      background-color: #6aaa64; /* Green */
+      color: white;
+    }
+    .wrong-position {
+      background-color: #c9b458; /* Yellow */
+      color: white;
+    }
+    .incorrect {
+      background-color: #3a3a3a; /* Gray */
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="game-container">
+  <h1>Wordle Game</h1>
+  <div class="board" id="board"></div>
+  <div class="input-container">
+    <input type="text" id="guess-input" maxlength="7" placeholder="Enter word">
+    <button onclick="makeGuess()">Guess</button>
+  </div>
+  <p id="message" class="message"></p>
+</div>
+
+<script>
+  // Fixed target word "DICKENS"
+  const targetWord = "dickens"; 
+
+  let attempts = 0;
+  const maxAttempts = 6;
+  const board = document.getElementById('board');
+  const guessInput = document.getElementById('guess-input');
+  const messageElement = document.getElementById('message');
+
+  // Generate empty board
+  function generateBoard() {
+    for (let i = 0; i < maxAttempts; i++) {
+      for (let j = 0; j < 7; j++) {
+        const cell = document.createElement('div');
+        board.appendChild(cell);
+      }
+    }
+  }
+
+  // Check guess against target word
+  function checkGuess(guess) {
+    const feedback = [];
+    const targetArray = targetWord.split('');
+
+    // First pass: check for exact matches (green)
+    for (let i = 0; i < 7; i++) {
+      if (guess[i] === targetArray[i]) {
+        feedback.push('correct');
+        targetArray[i] = null; // Mark this letter as used
+      } else {
+        feedback.push(null);
+      }
+    }
+
+    // Second pass: check for letters in wrong position (yellow)
+    for (let i = 0; i < 7; i++) {
+      if (!feedback[i] && targetArray.includes(guess[i])) {
+        feedback[i] = 'wrong-position';
+        targetArray[targetArray.indexOf(guess[i])] = null; // Mark this letter as used
+      }
+    }
+
+    // Mark the remaining letters as incorrect (gray)
+    for (let i = 0; i < 7; i++) {
+      if (!feedback[i]) {
+        feedback[i] = 'incorrect';
+      }
+    }
+
+    return feedback;
+  }
+
+  // Make a guess
+  function makeGuess() {
+    const guess = guessInput.value.toLowerCase().trim();
+
+    if (guess.length !== 7) {
+      messageElement.textContent = "Please enter a valid 7-letter word.";
+      messageElement.style.color = "red";
+      return;
+    }
+
+    attempts++;
+    const feedback = checkGuess(guess);
+
+    // Update board
+    const cells = document.querySelectorAll('.board div');
+    for (let i = 0; i < 7; i++) {
+      const cell = cells[(attempts - 1) * 7 + i];
+      cell.textContent = guess[i].toUpperCase();
+      cell.classList.add(feedback[i]);
+    }
+
+    // Check if the guess is correct
+    if (guess === targetWord) {
+      messageElement.textContent = "Congratulations! You've guessed the word!";
+      messageElement.style.color = "green";
+      guessInput.disabled = true;  // Disable input after winning
+    } else if (attempts >= maxAttempts) {
+      messageElement.textContent = `Game over! The correct word was DICKENS.`;
+      messageElement.style.color = "red";
+      guessInput.disabled = true;  // Disable input after game over
+    } else {
+      messageElement.textContent = `${maxAttempts - attempts} attempts left.`;
+    }
+
+    guessInput.value = '';
+  }
+
+  // Initialize game
+  generateBoard();
+</script>
+
+</body>
+</html>
